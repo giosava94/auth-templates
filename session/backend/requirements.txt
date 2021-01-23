@@ -1,0 +1,8 @@
+black
+eventlet
+flask-cors
+flask-login
+flask-restful
+flask-session
+flask-socketio
+webargs
