@@ -1,0 +1,26 @@
+# Traefik static confifuration
+# These are parsed at startup time
+
+log:
+  level: INFO
+
+# Enable web UI
+api:
+  dashboard: false
+  insecure: true
+
+# Define http and https ports
+entryPoints:
+  web:
+    address: ":80"
+  web-secure:
+    address: ":443"
+
+# Connect to docker
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+  file:
+    filename: /traefik_dyn.yml
+    watch: true
