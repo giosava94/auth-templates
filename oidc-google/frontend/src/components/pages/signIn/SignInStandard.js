@@ -12,6 +12,7 @@ import { Https } from "@material-ui/icons";
 import { useState } from "react";
 import { Loading } from "..";
 import { useAuthDataContext } from "../../system/auth-provider";
+import { axiosWithCredentials } from "../../system/axios-settings";
 
 const useStyles = makeStyles((theme) => ({
   dialog: {
@@ -30,11 +31,14 @@ function SingInStandard(props) {
 
   const handleSubmit = async (e) => {
     setLoading(true);
-    const loginSuccess = await onLogin({
-      username: username,
-      password: password,
-    });
-    if (!loginSuccess) {
+    try {
+      const resp = await axiosWithCredentials.post("/api/login", {
+        username: username,
+        password: password,
+      });
+      onLogin(resp.data);
+    } catch (e) {
+      console.log(e);
       setErrorMsg("Login failed");
     }
     setUsername(undefined);

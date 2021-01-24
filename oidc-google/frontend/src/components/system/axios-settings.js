@@ -4,7 +4,7 @@ const axiosWithCredentials = axios.create({
   withCredentials: true,
   baseURL:
     process.env.NODE_ENV === "development"
-      ? "http://localhost:5000"
+      ? "https://localhost:5000"
       : undefined,
 });
 

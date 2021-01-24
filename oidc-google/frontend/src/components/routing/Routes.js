@@ -6,7 +6,6 @@ import { useAuthDataContext } from "../system/auth-provider";
 /* Main routing component. User-Developer customizable. */
 function Routes(props) {
   const { fetching } = useAuthDataContext();
-
   return [
     <Switch key="switch">
       {/* Generic public route. Always accessible */}
@@ -21,7 +20,7 @@ function Routes(props) {
       <PrivateRoute exact path="/home" component={Home} />
 
       {/* User-Developer additional page for their custom auth process */}
-      <AuthCallbackRoute path="/singin_callback" />
+      <AuthCallbackRoute path="/signin_callback" />
 
       <Redirect to="/home" />
     </Switch>,
