@@ -1,0 +1,9 @@
+# Main directory utilities
+.vscode/
+.dockerignore
+.git*
+*.md
+*.txt
+**/node_modules
+**/coverage
+**/package-lock.json
