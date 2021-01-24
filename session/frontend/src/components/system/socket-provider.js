@@ -7,7 +7,7 @@ const SocketProvider = (props) => {
   const baseURL =
     process.env.NODE_ENV === "development"
       ? "http://localhost:5000"
-      : undefined;
+      : process.env.REACT_APP_BASE_URL;
   const namespace = "";
 
   const [socket, setSocket] = useState(null);
