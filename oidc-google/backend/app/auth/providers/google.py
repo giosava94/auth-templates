@@ -13,7 +13,7 @@ from flask import request
 from flask_restful import Resource
 from webargs import fields
 from webargs.flaskparser import use_args
-from ..user import Login, Logout, get_tokens
+from ..user import Refresh, Logout, get_tokens
 
 # Configuration
 CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
@@ -135,6 +135,7 @@ class ProviderAuthorization(Resource):
         "login_hint": fields.Str(),
         "prompt": fields.Str(),
         "access_type": fields.Str(),
+        "state": fields.Str(),
     }
 
     @staticmethod

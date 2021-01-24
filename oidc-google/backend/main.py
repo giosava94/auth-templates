@@ -18,7 +18,7 @@ if AUTH_ENABLED:
         add_auth_routes = importlib.import_module(
             "app.auth.providers." + AUTH_TYPE
         ).add_auth_routes
-    except:
+    except Exception as e:
         # Standard authentication when the specified authentication
         # does not exists or it is not specified
         from app.auth.providers.local import add_auth_routes
