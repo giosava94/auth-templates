@@ -1,0 +1,8 @@
+black
+flask-restful
+flask-cors
+flask-jwt-extended
+oauthlib
+pyopenssl
+requests
+webargs
