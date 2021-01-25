@@ -1,0 +1,70 @@
+version: "3.5"
+
+services:
+  backend:
+    container_name: auth-templates-oidc-google-backend
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    restart: unless-stopped
+    networks:
+      - web_net
+    env_file:
+      - "./.env"
+    environment:
+      JWT_COOKIE_SECURE: "true"
+    volumes:
+      - ./backend:/app
+      - ./certs:/certs
+      - ./users:/users
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-templates-oidc-google-backend.rule=Host(`${REACT_APP_BASE_URL}`) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.auth-templates-oidc-google-backend.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.auth-templates-oidc-google-backend.entrypoints=web"
+      - "traefik.http.routers.auth-templates-oidc-google-backend-secure.rule=Host(`${REACT_APP_BASE_URL}`) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.auth-templates-oidc-google-backend-secure.entrypoints=web-secure"
+      - "traefik.http.routers.auth-templates-oidc-google-backend-secure.tls=true"
+      - "traefik.docker.network=oidc-google_web_net"
+
+  frontend:
+    container_name: auth-templates-oidc-google-frontend
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile.prod
+      args:
+        REACT_APP_BASE_URL: ${REACT_APP_BASE_URL}
+        REACT_APP_AUTH_ENABLED: ${REACT_APP_AUTH_ENABLED}
+        REACT_APP_AUTHN: ${REACT_APP_AUTHN}
+        REACT_APP_AUTHZ: ${REACT_APP_AUTHZ}
+    restart: unless-stopped
+    networks:
+      - web_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-templates-oidc-google.rule=Host(`${REACT_APP_BASE_URL}`)"
+      - "traefik.http.routers.auth-templates-oidc-google.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.auth-templates-oidc-google.entrypoints=web"
+      - "traefik.http.routers.auth-templates-oidc-google-secure.rule=Host(`${REACT_APP_BASE_URL}`)"
+      - "traefik.http.routers.auth-templates-oidc-google-secure.entrypoints=web-secure"
+      - "traefik.http.routers.auth-templates-oidc-google-secure.tls=true"
+
+  reverse-proxy:
+    image: traefik:2.3
+    container_name: auth-templates-oidc-google-reverse-proxy
+    restart: unless-stopped
+    networks:
+      - web_net
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./reverse-proxy/traefik.yml:/traefik.yml:ro
+      - ./reverse-proxy/traefik_dyn.yml:/traefik_dyn.yml:ro
+      - ./certs:/certs/
+
+networks:
+  web_net:

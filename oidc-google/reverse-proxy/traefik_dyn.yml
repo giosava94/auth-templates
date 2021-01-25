@@ -1,0 +1,11 @@
+# Define a middleware to redirect to https
+http:
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+
+tls:
+  certificates:
+    - certFile: /certs/remote-access.spes2.lnl.infn.it.crt
+      keyFile: /certs/remote-access.spes2.lnl.infn.it.key
