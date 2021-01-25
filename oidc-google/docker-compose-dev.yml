@@ -1,0 +1,19 @@
+version: "3.5"
+
+services:
+  frontend:
+    container_name: auth-templates-oidc-google-dev-frontend
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile.dev
+    restart: "no"
+    ports:
+      - 3000:3000
+    env_file:
+      - ".env"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    stdin_open: true
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public

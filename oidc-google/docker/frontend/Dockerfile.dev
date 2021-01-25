@@ -1,0 +1,14 @@
+FROM node:15
+
+WORKDIR /app
+
+ENV PATH /app/node_modules/.bin:$PATH
+
+COPY frontend/package*.json ./
+RUN npm install --silent
+RUN npm install react-script@latest -g --silent
+COPY frontend/ .
+
+EXPOSE 3000
+
+CMD [ "npm", "start" ]
