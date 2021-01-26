@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Redirect } from "react-router-dom";
 import { Loading } from "..";
 import { useAuthDataContext } from "../../system/auth-provider";
 import { redirect_uri } from "../../routing/AuthCallbackRoute";
@@ -6,7 +7,7 @@ import { axiosWithCredentials } from "../../system/axios-settings";
 
 function SignInCallbackGoogle(props) {
   const { location } = props;
-  const { onLogin } = useAuthDataContext();
+  const { user, onLogin } = useAuthDataContext();
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -31,10 +32,18 @@ function SignInCallbackGoogle(props) {
     myLogin();
   }, [location]);
 
-  return [
-    <div key="error">{error ? "Login error" : ""}</div>,
-    <Loading key="loading" loading={!error} />,
-  ];
+  let component;
+  if (user) {
+    const state = (location.search.match(/state=([^&]+)/) || [])[1];
+    const prevPage = decodeURIComponent(state);
+    if (error) {
+      component = <div key="error">Login error</div>;
+    } else {
+      component = <Redirect key="redirect" to={prevPage} />;
+    }
+  }
+
+  return [component, <Loading key="loading" open={!user} />];
 }
 
 export default SignInCallbackGoogle;

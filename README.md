@@ -165,7 +165,7 @@ Developers can implement their own sign-in components and can make requests to t
 
 Developers can implement multiple sign-in components recalling themeselves. For example when implementing an OIDC authentication the external provider requires a _callback endpoint_ on the web client to land when the access to the user data, through the external provider, has been granted ([OIDC authorization code flow](#OIDC_AUTH_CODE_FLOW)). At the _callback enpoint_ the web client will render another component which will execute the remaining authentication passages.
 
-Because OIDC providers usage is common all the sub-projects already provides an **AuthCallbackRoute** component that, based on the authentication settings (_.env_ file), loads the correct _sing-in-callback_ component (which must be implemented). The landing endpoint for the external provider is already calculated in the **AuthCallbackRoute** (based on the application base url) and can be used (imported) into other components. When the user is authenticated this component automatically redirects him to the home page.
+Because OIDC providers usage is common all the sub-projects already provides an **AuthCallbackRoute** component that, based on the authentication settings (_.env_ file), loads the correct _sing-in-callback_ component (which must be implemented). The landing endpoint for the external provider is already calculated in the **AuthCallbackRoute** (based on the application base url) and can be used (imported) into other components.
 
 These are the requirements when implementing custom authentication components:
 
@@ -176,9 +176,7 @@ These are the requirements when implementing custom authentication components:
 
 In the **oidc-google** sub-project we add a **SignInGoogle** component. This component makes a request to get the correct url to redirect the user to the external provider authentication and authorization page. Once the response arrives it redirects the user to that page.
 
-When the external provider redirects the user to the web client callback page, **AuthCallabackRoute** renders **SignInCallbackGoogle**. This component reads the code, received as params in the current url, and executes a _GET_ request to web server login endpoint (adding all required params). When the web server returns the user data **SignInCallbackGoogle** calls the _onLogin_ function to update user data in the web client.
-
-When the user is authenticated **AuthCallbackRoute** redirects the user to the home page.
+When the external provider redirects the user to the web client callback page, **AuthCallabackRoute** renders **SignInCallbackGoogle**. This component reads the code, received as params in the current url, and executes a _GET_ request to web server login endpoint (adding all required params). When the web server returns the user data **SignInCallbackGoogle** calls the _onLogin_ function to update user data in the web client. It is duty of your component to redirect the user to the home page or the protected page! In our case we can return to the private page we were trying to access before the login; this is possible because we sent to the OIDC provider a state with the correct path and when the provider gave us the response it returned again that params. 
 
 > The exports addition in the _index.js_ file are mandatory in order to allow the **PrivateRoute** and **AuthCallbackRoute** logic to load the correct sign-in page.
 

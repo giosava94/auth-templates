@@ -7,6 +7,7 @@ function SignInGoogle(props) {
   const [fetching, setFetching] = useState(true);
   const [link, setLink] = useState();
   const [error, setError] = useState(false);
+  const { location } = props;
 
   useEffect(() => {
     const getRedirectLink = async () => {
@@ -16,7 +17,7 @@ function SignInGoogle(props) {
         `redirect_uri=${redirect_uri}`,
         `scope=${scopes}`,
         "prompt=select_account",
-        `state=google`,
+        `state=${location.pathname}`,
       ].join("&");
       try {
         const response = await axiosWithCredentials.get(
