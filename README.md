@@ -6,14 +6,20 @@ How can we develop a good authentication flow for our web applications? How can 
 
 In this example project we will show some authentication and authorization examples, Examples differs based on the communication type establish between the web client and the web server.
 
-In this project we will use a REACT web client, a PYTHON (Flask) web server and, when required, a MONGODB database. A set of docker containers is given in order to simplify the project execution but they are not mandatory.
+In this project we will use a REACT web client and a PYTHON (Flask) web server. A set of docker containers is given in order to simplify the project execution but they are not mandatory.
 
-In this project we will deal with the following web client-web server communication type:
+In this project we present a project structure that is designed to present a standard authentication method and foresees the implementation of multiple authentication methods to be used in a mutually exclusive way. This does not imply that one of the custom authentication method can't provide multiple authentication solutions (external provider with other providers).
+
+Usually the authentication logic may change but how user data are managed in the application should not depend on this. For this reason we present a set of sub-projects with a customizable authentication logic which does not impact on how this data are used inside the web application.
+
+The sub-projects architecture has been designed to tempt developers not to change the already present files but to add new files, with their custom logic, with few constraints required for the project to correctly use them.
+
+Moreover in this project we will deal with the following web client-web server communication type:
 
 - A web client will periodically execute requests to a web server to retrieve information -> RESTful APIs.
 - A web client establishes a full-duplex communication with the web server -> WebSocket connection.
 
-Which is the main difference between this approaches, from an authentication and authorization point of view?
+Which is the main difference between these approaches, from an authentication and authorization point of view?
 
 RESTful APIs are stateless whereas WebSocket connections are stateful.
 
@@ -111,14 +117,86 @@ When we close the connection the user remains logged id, this way when refreshin
 
 When the users signs-out the connection is also closed.
 
+# ADD CUSTOM AUTHENTICATION
+
+Often developers want to integrate their custom authentication logic or use external authentication provider. These changes can affect both the web client and the web server.
+
+In both **JWTs** and **session** based sub-projects we arrange a simple authentication system which can be easily expanded by developers. In the proposed logic developers don't have to change the default files. They have a subset of templates to copy and implement with their logic. If they follow the instructions correctly all should work.
+
+In the **oidc-google** sub-project we give an example of a custom authentication using google as an external **OpenID Connect** (OIDC) provider. For a description of the code flow when performing an OIDC authentication look at the [OIDC authorization code flow](#OIDC_AUTH_CODE_FLOW).
+
+At first we will talk about the web server, then about the client server. We use this order because changes to the first may not implies changes to the latter, whereas changes to the web client will (most probably) implies changes to the web server. In the **oidc-google** example changes to the web server requires changes to the web client.
+
+## WEB SERVER
+
+All authentication and authorizations customizable endpoints and related functions are stored in the **backend/app/auth/providers** folder.
+
+In this folder the _local.py_ module contains the standard endpoints and functions for the local authentication.
+
+The _example.py_ module is a template with the instructions to write a new module with the custom authentication functions and endpoints. As the description said, developers should _copy_ this file and _implement_:
+
+- **Login endpoint**: if no changes are required it can be imported from another module already implementing it (for example _local.py_) or it can be written from zero. The unique requirement for this endpoint is the usage of _get_tokens_ or _start_user_session_ functions (it depends on the communication type between the web server and the web client).
+- **Refresh endpoint**: this should be imported from _local.py_. If developers want to write their own refresh endpoint, they must take as reference the one implemented in _local.py_.
+- **Logout endpoint**: if no changes are required it can be imported from another module already implementing it (for example _local.py_) or it can be written from zero. The unique requirement for this endpoint is that it has to clear all **JWTs** or **Session** cookies (it depends on the communication type between the web server and the web client).
+- **add_auth_routes**: this function is essential because it will be used by the _main.py_ module in the **backend** folder. This function is in charge to add to the APIs all (or a part) of the endpoints defined in this file.
+
+Developers can add to this file as much functions and enpoints as they want (be consistent on what you add to this file!).
+
+The _google.py_ module is a working example of what developers should do to implement external authentication and authorization with an OIDC provider.
+
+This module uses the standard logout and refresh enpoints, but it implements a custom login endpoint based on multiple functions. The login endpoints does not expect a _PUT_ request (as the one implemented into _local.py_) but a _GET_ request with specific params. Moreover it implements another endpoints to get the correct link to redirect the user to the Google's authentication and authorization page.
+Finally, as required by _example.py_, it implements the _add_auth_routes_ function adding the defined resources to the web server APIs.
+
+This example shows how various can be the authentication procedures.
+
+> How can _main.py_ import the correct _add_auth_routes_ function? Developers have to set the **REACT_APP_AUTHN** environment variable in the _.env_ file with the name of their custom authentication procedure, in our example **google**.
+>
+> This name must be equal to the module name!
+>
+> In fact the _main.py_ module searches in the **backend/app/auth/providers** a module with the name stored in the environment variable. If it finds the module it loads from it the _add_auth_routes_ otherwise it loads _add_auth_routes_ from _local.py_.
+
+## WEB CLIENT
+
+All sing-in pages are stored in the **src/components/pages/singIn** folder.
+
+In this folder there is the **SignInStandard** component which is the standard login page. This page, on form submit, executes a _POST_ request to the web server sending username and password. Once the component receives the response it uses the _onLogin_ function of the authentication provider to store in the context the user data retrieved from the database.
+
+Developers can implement their own sign-in components and can make requests to the web server as they please. Based on the authentication settings (_.env_ file), **PrivateRoute** will load the correct **SignIn** page.
+
+Developers can implement multiple sign-in components recalling themeselves. For example when implementing an OIDC authentication the external provider requires a _callback endpoint_ on the web client to land when the access to the user data, through the external provider, has been granted ([OIDC authorization code flow](#OIDC_AUTH_CODE_FLOW)). At the _callback enpoint_ the web client will render another component which will execute the remaining authentication passages.
+
+Because OIDC providers usage is common all the sub-projects already provides an **AuthCallbackRoute** component that, based on the authentication settings (_.env_ file), loads the correct _sing-in-callback_ component (which must be implemented). The landing endpoint for the external provider is already calculated in the **AuthCallbackRoute** (based on the application base url) and can be used (imported) into other components. When the user is authenticated this component automatically redirects him to the home page.
+
+These are the requirements when implementing custom authentication components:
+
+- The first component to render when the authentication procedure begins must be exported from the _index.js_ as a named component with the _SignIn_ prefix (i.e. **SignInCustom**).
+- At the end of the authentication procedure (which may involve multiple components), the component must receive a response from the web server with the user data and call the _onLogin_ function of **AuthDataProvider** to save those data in the context.
+- When writing a sign-in-callback component, it must be exported from the _index.js_ as a named component with the _SignInCallback_ prefix and the same suffix of the corresponding _SignInPage_ (i.e. **SignInCallbackCustom**).
+- Use **axiosWithCredentials** when performing requests to the web server. This _axios_ instance already has the correct base url and it is instructed to send and receive _cookies_.
+
+In the **oidc-google** sub-project we add a **SignInGoogle** component. This component makes a request to get the correct url to redirect the user to the external provider authentication and authorization page. Once the response arrives it redirects the user to that page.
+
+When the external provider redirects the user to the web client callback page, **AuthCallabackRoute** renders **SignInCallbackGoogle**. This component reads the code, received as params in the current url, and executes a _GET_ request to web server login endpoint (adding all required params). When the web server returns the user data **SignInCallbackGoogle** calls the _onLogin_ function to update user data in the web client.
+
+When the user is authenticated **AuthCallbackRoute** redirects the user to the home page.
+
+> The exports addition in the _index.js_ file are mandatory in order to allow the **PrivateRoute** and **AuthCallbackRoute** logic to load the correct sign-in page.
+
+> How can PrivateRoute and AuthCallbackRoute import the correct component? Developers have to set the **REACT_APP_AUTHN** environment variable in the _.env_ file with the name of their custom authentication procedure, in our example **google**.
+>
+> These components import, from the _src/components/pages/signIn/index.js_ file, all the components defined in the _signIn_ folder and, based on the environment variable load the correct component to render.
+>
+> In our example we load the **SignInGoogle** and **SignInCallbackGoogle** components. If the name specified in the environemnt variable does not match any of the exported components the app renders the **SingInStandard** component.
+
 # RUN THE EXAMPLES
 
 Each sub-project has its own folder with all the required files and dependencies.
 
-| Architecture | Folder      |
-| ------------ | ----------- |
-| RESTful APIs | **jwt**     |
-| SESSION      | **session** |
+| Architecture | Folder          |
+| ------------ | --------------- |
+| RESTful APIs | **jwt**         |
+| SESSION      | **session**     |
+| OIDC GOOGLE  | **oidc-google** |
 
 ## DOCKER-COMPOSE EXECUTION
 
@@ -160,6 +238,8 @@ To run the web client outside its container, check you have _npm_ and _nodejs_ i
 
 By default authentication is disabled. To enable authentication add to the _.env_ file the string **REACT_APP_AUTH_ENABLED=TRUE**, export this value as an environment variable directly on your OS if you are not using the docker-compose files.
 
+> The **oidc-google** sub-project requires the **GOOGLE_CLIENT_ID** and **GOOGLE_SECRET** environment variables. We do not provide a default value for them.
+
 ## CONTAINERS
 
 Here we will describe the containers structure.
@@ -176,7 +256,11 @@ Here we will describe the containers structure.
 
 - **TRAEFIK**: ...
 
-# ADD CUSTOM AUTHENTICATION
+# FURTHER EXPLANATIONS
+
+## OIDC AUTH CODE FLOWS
+
+...
 
 # REFERENCES
 
@@ -190,5 +274,6 @@ Here we will describe the containers structure.
 - Flask-Session: https://flask-session.readthedocs.io/en/latest/
 - Flask-SocketIO: https://flask-socketio.readthedocs.io/en/latest/
 - Json Web Tokens: https://testdriven.io/blog/web-authentication-methods/
+- OAuth 2.0 with Google APIs - OIDC: https://developers.google.com/identity/protocols/oauth2/openid-connect
 - REACT: https://reactjs.org/
 - Traefik: https://doc.traefik.io/traefik/
