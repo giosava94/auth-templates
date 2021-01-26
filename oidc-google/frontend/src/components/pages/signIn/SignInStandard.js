@@ -23,39 +23,43 @@ const useStyles = makeStyles((theme) => ({
 /* Standard sign-in page */
 function SingInStandard(props) {
   const [loading, setLoading] = useState(false);
-  const [username, setUsername] = useState();
-  const [password, setPassword] = useState();
-  const [errorMsg, setErrorMsg] = useState();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const classes = useStyles();
   const { onLogin } = useAuthDataContext();
 
   const handleSubmit = async (e) => {
-    setLoading(true);
-    try {
-      const resp = await axiosWithCredentials.post("/api/login", {
-        username: username,
-        password: password,
-      });
-      onLogin(resp.data);
-    } catch (e) {
-      console.log(e);
-      setErrorMsg("Login failed");
+    if (username !== "" && password !== "") {
+      setLoading(true);
+      try {
+        const resp = await axiosWithCredentials.post("/api/login", {
+          username: username,
+          password: password,
+        });
+        onLogin(resp.data);
+      } catch (e) {
+        console.log(e);
+        setErrorMsg("Login failed");
+      }
+      setUsername("");
+      setPassword("");
+      setLoading(false);
+    } else {
+      setErrorMsg("Required")
     }
-    setUsername(undefined);
-    setPassword(undefined);
-    setLoading(false);
   };
 
   const handleUsername = (e) => {
     if (errorMsg) {
-      setErrorMsg(undefined);
+      setErrorMsg("");
     }
     setUsername(e.target.value);
   };
 
   const handlePassword = (e) => {
     if (errorMsg) {
-      setErrorMsg(undefined);
+      setErrorMsg("");
     }
     setPassword(e.target.value);
   };
@@ -78,7 +82,7 @@ function SingInStandard(props) {
               value={username}
               onChange={handleUsername}
               autoComplete="off"
-              error={errorMsg}
+              error={errorMsg !== ""}
               helperText={errorMsg}
             />
           </Grid>
@@ -91,7 +95,7 @@ function SingInStandard(props) {
               value={password}
               onChange={handlePassword}
               autoComplete="off"
-              error={errorMsg}
+              error={errorMsg !== ""}
               helperText={errorMsg}
             />
           </Grid>
