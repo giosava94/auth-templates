@@ -35,7 +35,8 @@ const PrivateRoute = ({ component, authorized, ...options }) => {
     // Redirect to a custom sign-in page
     else if (
       process.env.REACT_APP_AUTHN !== undefined &&
-      process.env.REACT_APP_AUTHN !== null
+      process.env.REACT_APP_AUTHN !== null &&
+      process.env.REACT_APP_AUTHN !== ""
     ) {
       const capitalizeFirstLetter = (string) => {
         return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();

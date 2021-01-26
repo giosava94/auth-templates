@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
-import { PrivateRoute } from ".";
+import { AuthCallbackRoute, PrivateRoute } from ".";
 import { Public, Home, Loading } from "../pages";
 import { useAuthDataContext } from "../system/auth-provider";
 import { useSocketContext } from "../system/socket-provider";
@@ -41,6 +41,7 @@ function Routes(props) {
       <PrivateRoute exact path="/home" component={Home} />
 
       {/* User-Developer additional pages */}
+      <AuthCallbackRoute path="/signin_callback" />
 
       <Redirect to="/home" />
     </Switch>,

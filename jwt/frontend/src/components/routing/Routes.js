@@ -1,12 +1,11 @@
 import { Redirect, Route, Switch } from "react-router-dom";
-import { PrivateRoute } from ".";
+import { AuthCallbackRoute, PrivateRoute } from ".";
 import { Public, Home, Loading } from "../pages";
 import { useAuthDataContext } from "../system/auth-provider";
 
 /* Main routing component. User-Developer customizable. */
 function Routes(props) {
   const { fetching } = useAuthDataContext();
-
   return [
     <Switch key="switch">
       {/* Generic public route. Always accessible */}
@@ -21,6 +20,7 @@ function Routes(props) {
       <PrivateRoute exact path="/home" component={Home} />
 
       {/* User-Developer additional page for their custom auth process */}
+      <AuthCallbackRoute path="/signin_callback" />
 
       <Redirect to="/home" />
     </Switch>,

@@ -1,6 +1,7 @@
 import { Route } from "react-router-dom";
-import { SignInCustom, SignInStandard, NotAuthorized } from "../pages";
+import { NotAuthorized } from "../pages";
 import { useAuthDataContext } from "../system/auth-provider";
+import * as SignIns from "../pages/signIn";
 
 /* 
   Private Route.
@@ -31,13 +32,22 @@ const PrivateRoute = ({ component, authorized, ...options }) => {
         finalComponent = NotAuthorized;
       }
     }
-    // Redirect to custom sign-in page
-    else if (process.env.REACT_APP_AUTHN === "custom") {
-      finalComponent = SignInCustom;
+    // Redirect to a custom sign-in page
+    else if (
+      process.env.REACT_APP_AUTHN !== undefined &&
+      process.env.REACT_APP_AUTHN !== null &&
+      process.env.REACT_APP_AUTHN !== ""
+    ) {
+      const capitalizeFirstLetter = (string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+      };
+
+      finalComponent =
+        SignIns["SignIn" + capitalizeFirstLetter(process.env.REACT_APP_AUTHN)];
     }
     // Redirect to standard sign-in page
     else {
-      finalComponent = SignInStandard;
+      finalComponent = SignIns.SignInStandard;
     }
   }
   // Authentication and authorization disabled

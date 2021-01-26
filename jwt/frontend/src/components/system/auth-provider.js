@@ -9,15 +9,8 @@ const AuthDataProvider = (props) => {
   const [authData, setAuthData] = useState(initialAuthData);
   const [fetching, setFetching] = useState(false);
 
-  const onLogin = async (payload) => {
-    try {
-      const resp = await axiosWithCredentials.post("/api/login", payload);
-      setAuthData({ user: resp.data });
-      return true;
-    } catch (e) {
-      console.log(e);
-      return false;
-    }
+  const onLogin = (userData) => {
+    setAuthData({ user: userData });
   };
 
   const onLogout = async () => {

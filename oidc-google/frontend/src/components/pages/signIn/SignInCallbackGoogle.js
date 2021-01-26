@@ -22,7 +22,7 @@ function SignInCallbackGoogle(props) {
       ].join("&");
       try {
         const resp = await axiosWithCredentials.get(`/api/login?${qParams}`);
-        onLogin({ user: resp.data });
+        onLogin(resp.data);
       } catch (err) {
         console.log(err);
         setError(true);

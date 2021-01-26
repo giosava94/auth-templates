@@ -10,7 +10,7 @@ const AuthDataProvider = (props) => {
   const [fetching, setFetching] = useState(false);
 
   const onLogin = (userData) => {
-    setAuthData(userData);
+    setAuthData({ user: userData });
   };
 
   const onLogout = async () => {
