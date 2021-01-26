@@ -6,6 +6,7 @@ savarese.giovanni94@gmail.com
 
 import json, os
 from flask_login import UserMixin, login_user
+from ..config import USERS_DB_FILE
 
 
 class User(UserMixin):
@@ -16,7 +17,7 @@ class User(UserMixin):
 
     @staticmethod
     def get(user_id):
-        with open("users.txt", "r") as users_file:
+        with open(USERS_DB_FILE, "r") as users_file:
             users = json.load(users_file)
         user = users.get(user_id, None)
         if not (user is None):
@@ -30,18 +31,17 @@ class User(UserMixin):
 
     @staticmethod
     def create(id_, name, groups):
-        f_name = "users.txt"
         users = {}
 
-        if not os.path.isfile(f_name):
-            with open(f_name, "w") as users_file:
+        if not os.path.isfile(USERS_DB_FILE):
+            with open(USERS_DB_FILE, "w") as users_file:
                 json.dump(users, users_file)
 
-        with open(f_name, "r") as users_file:
+        with open(USERS_DB_FILE, "r") as users_file:
             users = json.load(users_file)
 
         users[id_] = {"name": name, "groups": groups}
-        with open(f_name, "w") as users_file:
+        with open(USERS_DB_FILE, "w") as users_file:
             json.dump(users, users_file)
 
 

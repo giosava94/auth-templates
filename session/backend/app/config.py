@@ -21,6 +21,12 @@ AUTH_TYPE = os.environ.get("REACT_APP_AUTHN", "").lower()
 
 # Path to the local authorization file
 AUTHORIZATIONS_FILE = "../users/authorizations.json"
+USERS_DB_FILE = "users.txt"
+
+if AUTH_ENABLED and not os.path.isfile(USERS_DB_FILE):
+    with open(USERS_DB_FILE, "w") as f:
+        f.write("{}")
+
 
 # Configuration object with relevant variables.
 class FlaskConfig(object):
