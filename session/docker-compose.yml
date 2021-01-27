@@ -1,0 +1,68 @@
+version: "3.5"
+
+services:
+  backend:
+    container_name: auth-templates-session-backend
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    restart: unless-stopped
+    networks:
+      - web_net
+    env_file:
+      - "./.env"
+    environment:
+      SESSION_COOKIE_SECURE: "true"
+    volumes:
+      - ./certs:/certs
+      - ./users:/users
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-templates-session-backend.rule=Host(`${REACT_APP_BASE_URL}`) && PathPrefix(`/api/`, `/socket.io/`)"
+      - "traefik.http.routers.auth-templates-session-backend.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.auth-templates-session-backend.entrypoints=web"
+      - "traefik.http.routers.auth-templates-session-backend-secure.rule=Host(`${REACT_APP_BASE_URL}`) && PathPrefix(`/api/`, `/socket.io/`)"
+      - "traefik.http.routers.auth-templates-session-backend-secure.entrypoints=web-secure"
+      - "traefik.http.routers.auth-templates-session-backend-secure.tls=true"
+      - "traefik.docker.network=session_web_net"
+  
+  frontend:
+    container_name: auth-templates-session-frontend
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile.prod
+      args:
+        REACT_APP_AUTH_ENABLED: ${REACT_APP_AUTH_ENABLED}
+        REACT_APP_AUTHN: ${REACT_APP_AUTHN}
+        REACT_APP_AUTHZ: ${REACT_APP_AUTHZ}
+    restart: unless-stopped
+    networks:
+      - web_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-templates-session.rule=Host(`${REACT_APP_BASE_URL}`)"
+      - "traefik.http.routers.auth-templates-session.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.auth-templates-session.entrypoints=web"
+      - "traefik.http.routers.auth-templates-session-secure.rule=Host(`${REACT_APP_BASE_URL}`)"
+      - "traefik.http.routers.auth-templates-session-secure.entrypoints=web-secure"
+      - "traefik.http.routers.auth-templates-session-secure.tls=true"
+
+  reverse-proxy:
+    image: traefik:2.3
+    container_name: auth-templates-session-reverse-proxy
+    restart: unless-stopped
+    networks:
+      - web_net
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./reverse-proxy/traefik.yml:/traefik.yml:ro
+      - ./reverse-proxy/traefik_dyn.yml:/traefik_dyn.yml:ro
+      - ./certs:/certs/
+  
+networks:
+  web_net:

@@ -1,0 +1,11 @@
+# Define a middleware to redirect to https
+http:
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+
+tls:
+  certificates:
+    - certFile: /certs/auth-templates.com.crt
+      keyFile: /certs/auth-templates.com.key

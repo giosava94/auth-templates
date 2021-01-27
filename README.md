@@ -4,7 +4,7 @@
 
 How can we develop a good authentication flow for our web applications? How can we limit users operations through a safe authorization system?
 
-In this example project we will show some authentication and authorization examples, Examples differs based on the communication type establish between the web client and the web server.
+In this example project we will show some authentication and authorization examples. Examples differs based on the communication type establish between the web client and the web server.
 
 In this project we will use a REACT web client and a PYTHON (Flask) web server. A set of docker containers is given in order to simplify the project execution but they are not mandatory.
 
@@ -111,7 +111,7 @@ The ID used to retrieve the user data from the DB is stored in a _session cookie
 
 When the web client receives the user data it can now open a socket connection. When opening this connection the web server checks if the user is authenticated through the ID retrieved from the _session cookie_.
 
-when the socket connection is open we can skip the authentication check but we can add an authorization check to verify user permissions to perform specific action. In fact, through the session ID we can retrieve the user authorizations stored in the local DB.
+When the socket connection is opened we can skip the authentication check but we can add an authorization check to verify user permissions to perform specific action. In fact, through the session ID we can retrieve the user authorizations stored in the local DB.
 
 When we close the connection the user remains logged id, this way when refreshing the page the **AuthDataContext** performs a request (REST call) to the web server which, using information stored in the _session cookie_, can respond with the user information if the user is authenticated. If the user is not authenticated the session cookie is cleared.
 
@@ -236,7 +236,9 @@ To run the web client outside its container, check you have _npm_ and _nodejs_ i
 
 By default authentication is disabled. To enable authentication add to the _.env_ file the string **REACT_APP_AUTH_ENABLED=TRUE**, export this value as an environment variable directly on your OS if you are not using the docker-compose files.
 
-> The **oidc-google** sub-project requires the **GOOGLE_CLIENT_ID** and **GOOGLE_SECRET** environment variables. We do not provide a default value for them.
+> In the **jwt** sub-project when authentication is disabled you can't execute requests to the private endpoint because you have not the **JWTs**. If you want to update this logic you have to implement a custom decorator.
+
+> The **oidc-google** sub-project requires the **GOOGLE_CLIENT_ID** and **GOOGLE_SECRET** environment variables. We do not provide a default value for them. Moreover, when you launch the web server locally, you need to accept the ssl certificate every time you relaunch it (https://localhost:5000).
 
 ## CONTAINERS
 
@@ -250,7 +252,7 @@ Here we will describe the containers structure.
 
 - **WEB CLIENT**: At first it build a node instance with the web client similarly to what we have done in development mode, then it start nginx server running the web client instance. When the nginx instance is ready the build part is dropped lowering the image size. This container has no volumes attached.
 
-- **WEB SERVER**: It uses the tiangolo/uwsgi-nginx-flask which starts a uwsgi flask instance inside an ngnix server. When bulding the image we install the python packages listed in _requirements.txt_.
+- **WEB SERVER**: **jwt** and **oidc-google** projects use the tiangolo/uwsgi-nginx-flask image which starts a uwsgi flask instance inside an ngnix server. When bulding the image we install the python packages listed in _requirements.txt_. On the other side **session** project uses use a standard python image to run the web server because Flask-SocketIO already provides a production ready server based on *gevent* or *eventlet* (which must be installed on the docker image).
 
 - **TRAEFIK**: ...
 
