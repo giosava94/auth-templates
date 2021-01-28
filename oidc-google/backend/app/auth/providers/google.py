@@ -15,21 +15,29 @@ from webargs import fields
 from webargs.flaskparser import use_args
 from ..user import Refresh, Logout, get_tokens
 
-# Configuration
+# Configuration: MACROS
 CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
 SECRET = os.environ.get("GOOGLE_SECRET", None)
 DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
-# OAuth 2 client setup
-client = WebApplicationClient(CLIENT_ID)
-
-# Mapping local key value with external site key value
+# Configuration: Mapping local key value with external site key value
 keywords = {
-    "username": "given_name",
-    "picture": "picture",
+    "aud": "aud",
     "email": "email",
+    "email_verified": "email_verified",
+    "exp": "exp",
+    "family_name": "family_name",
+    "username": "given_name",
+    "iat": "iat",
+    "iss": "iss",
+    "locale": "locale",
+    "name": "name",
+    "picture": "picture",
     "uuid": "sub",
 }
+
+# OAuth 2 client setup
+client = WebApplicationClient(CLIENT_ID)
 
 
 def add_auth_routes(api):
@@ -76,6 +84,7 @@ def get_token_from_code(request):
         authorization_response=request.url,
         redirect_url=redirect_uri,
         code=code,
+        include_client_id=False,
     )
     token_response = requests.post(
         token_url,
