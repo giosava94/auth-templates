@@ -45,15 +45,21 @@ The **AuthDataContext** provides a **context provider** which will wrap all the 
 
 Below the **AuthDataContext** (from a hierarchical point of view) there are the app routes. They can be public or private. The component **Routes** contains all. This component will contains also the user defined routes which can be both public or private.
 
+![Web Client Architecture](pictures/WebClientAppArchitecture.png "Web client architecture")
+
 ## PRIVATE ROUTES
 
 Public routes can be accessed by any user, but the access to private routes is restricted to authorized users. If a user is not authenticated it is redirected to the sign-in page. If the user is authenticated and has the correct rights he can see the page content, but, if he is not authorized, he is redirect to an error page. The component **PrivateRoute** manage this logic.
 
 When the **AuthDataContext** updates it's state lower components are re-rendered. This logic allows the **PrivateRoute** to immediately redirect authenticated and authorized users to the correct page or redirect them to the sign-in page.
 
+![PrivateRoute](pictures/PrivateRoute.png "PrivateRoute")
+
 ## SIGN-IN AND SIGN-OUT
 
 The **SignIn** component shows a standard sign-in page. When users fills and submit the login form with their data, these data are sent, through the **AuthDataContext** _onLogin_ function to the web server. If the sign-in procedure succeeds the web server responds with the user data required to the web client and the **AuthDataContext** will store them in a _state_ variable; if the request does not succeeds the web server raises an exception and the web client shows error page or message.
+
+![SignIn Logic](pictures/SignInLogic.png "SignInLogic")
 
 When the user sign-out through the _onLogout_ function of **AuthDataContext**, it performs a request to the web server, which will clear browser cookies, and then clears the user data stored in the context.
 
@@ -123,7 +129,9 @@ Often developers want to integrate their custom authentication logic or use exte
 
 In both **JWTs** and **session** based sub-projects we arrange a simple authentication system which can be easily expanded by developers. In the proposed logic developers don't have to change the default files. They have a subset of templates to copy and implement with their logic. If they follow the instructions correctly all should work.
 
-In the **oidc-google** sub-project we give an example of a custom authentication using google as an external **OpenID Connect** (OIDC) provider. For a description of the code flow when performing an OIDC authentication look at the [OIDC authorization code flow](#OIDC_AUTH_CODE_FLOW).
+In the **oidc-google** sub-project we give an example of a custom authentication using google as an external **OpenID Connect** (OIDC) provider. More in details we use the *authorization code* flow. The following image, from Auth0 main site, explain in details the relevant steps of this flow.
+
+![OIDC authorization code flow](pictures/OIDCAuthCodeFlow.png "OIDC authorization code flow").
 
 At first we will talk about the web server, then about the client server. We use this order because changes to the first may not implies changes to the latter, whereas changes to the web client will (most probably) implies changes to the web server. In the **oidc-google** example changes to the web server requires changes to the web client.
 
@@ -140,11 +148,11 @@ The _example.py_ module is a template with the instructions to write a new modul
 - **Logout endpoint**: if no changes are required it can be imported from another module already implementing it (for example _local.py_) or it can be written from zero. The unique requirement for this endpoint is that it has to clear all **JWTs** or **Session** cookies (it depends on the communication type between the web server and the web client).
 - **add_auth_routes**: this function is essential because it will be used by the _main.py_ module in the **backend** folder. This function is in charge to add to the APIs all (or a part) of the endpoints defined in this file.
 
-Developers can add to this file as much functions and enpoints as they want (be consistent on what you add to this file!).
+Developers can add to this file as much functions and endpoints as they want (be consistent on what you add to this file!).
 
 The _google.py_ module is a working example of what developers should do to implement external authentication and authorization with an OIDC provider.
 
-This module uses the standard logout and refresh enpoints, but it implements a custom login endpoint based on multiple functions. The login endpoints does not expect a _PUT_ request (as the one implemented into _local.py_) but a _GET_ request with specific params. Moreover it implements another endpoints to get the correct link to redirect the user to the Google's authentication and authorization page.
+This module uses the standard logout and refresh endpoints, but it implements a custom login endpoint based on multiple functions. The login endpoints does not expect a _PUT_ request (as the one implemented into _local.py_) but a _GET_ request with specific params. Moreover it implements another endpoints to get the correct link to redirect the user to the Google's authentication and authorization page.
 Finally, as required by _example.py_, it implements the _add_auth_routes_ function adding the defined resources to the web server APIs.
 
 This example shows how various can be the authentication procedures.
@@ -163,7 +171,7 @@ In this folder there is the **SignInStandard** component which is the standard l
 
 Developers can implement their own sign-in components and can make requests to the web server as they please. Based on the authentication settings (_.env_ file), **PrivateRoute** will load the correct **SignIn** page.
 
-Developers can implement multiple sign-in components recalling themeselves. For example when implementing an OIDC authentication the external provider requires a _callback endpoint_ on the web client to land when the access to the user data, through the external provider, has been granted ([OIDC authorization code flow](#OIDC_AUTH_CODE_FLOW)). At the _callback enpoint_ the web client will render another component which will execute the remaining authentication passages.
+Developers can implement multiple sign-in components recalling themselves. For example when implementing an OIDC authentication the external provider requires a _callback endpoint_ on the web client to land when the access to the user data, through the external provider, has been granted ([OIDC authorization code flow](#OIDC_AUTH_CODE_FLOW)). At the _callback enpoint_ the web client will render another component which will execute the remaining authentication passages.
 
 Because OIDC providers usage is common all the sub-projects already provides an **AuthCallbackRoute** component that, based on the authentication settings (_.env_ file), loads the correct _sing-in-callback_ component (which must be implemented). The landing endpoint for the external provider is already calculated in the **AuthCallbackRoute** (based on the application base url) and can be used (imported) into other components.
 
@@ -176,7 +184,7 @@ These are the requirements when implementing custom authentication components:
 
 In the **oidc-google** sub-project we add a **SignInGoogle** component. This component makes a request to get the correct url to redirect the user to the external provider authentication and authorization page. Once the response arrives it redirects the user to that page.
 
-When the external provider redirects the user to the web client callback page, **AuthCallabackRoute** renders **SignInCallbackGoogle**. This component reads the code, received as params in the current url, and executes a _GET_ request to web server login endpoint (adding all required params). When the web server returns the user data **SignInCallbackGoogle** calls the _onLogin_ function to update user data in the web client. It is duty of your component to redirect the user to the home page or the protected page! In our case we can return to the private page we were trying to access before the login; this is possible because we sent to the OIDC provider a state with the correct path and when the provider gave us the response it returned again that params. 
+When the external provider redirects the user to the web client callback page, **AuthCallabackRoute** renders **SignInCallbackGoogle**. This component reads the code, received as params in the current url, and executes a _GET_ request to web server login endpoint (adding all required params). When the web server returns the user data **SignInCallbackGoogle** calls the _onLogin_ function to update user data in the web client. It is duty of your component to redirect the user to the home page or the protected page! In our case we can return to the private page we were trying to access before the login; this is possible because we sent to the OIDC provider a state with the correct path and when the provider gave us the response it returned again that params.
 
 > The exports addition in the _index.js_ file are mandatory in order to allow the **PrivateRoute** and **AuthCallbackRoute** logic to load the correct sign-in page.
 
@@ -246,21 +254,17 @@ Here we will describe the containers structure.
 
 ### DEVELOPMENT
 
-- **WEB CLIENT**: It uses a node image to start a development instance of the react app. It install all required npm packages then the src and public folder are mounted as volumes in the container; this strategy allows automatic page refresh when developers update a file in those folders.
+- **WEB CLIENT**: It uses a _node:15_ image to start a development instance of the react app. It install all required npm packages then the src and public folder are mounted as volumes in the container; this strategy allows automatic page refresh when developers update a file in those folders.
 
 ### PRODUCTION
 
-- **WEB CLIENT**: At first it build a node instance with the web client similarly to what we have done in development mode, then it start nginx server running the web client instance. When the nginx instance is ready the build part is dropped lowering the image size. This container has no volumes attached.
+- **WEB CLIENT**: At first it build a node instance with the web client similarly to what we have done in development mode, then it start _nginx_ server running the web client instance. When the _nginx_ instance is ready the build part is dropped lowering the image size. This container has no volumes attached.
 
-- **WEB SERVER**: **jwt** and **oidc-google** projects use the tiangolo/uwsgi-nginx-flask image which starts a uwsgi flask instance inside an ngnix server. When bulding the image we install the python packages listed in _requirements.txt_. On the other side **session** project uses use a standard python image to run the web server because Flask-SocketIO already provides a production ready server based on *gevent* or *eventlet* (which must be installed on the docker image).
+- **WEB SERVER**: **jwt** and **oidc-google** projects use the _tiangolo/uwsgi-nginx-flask_ image which starts a uwsgi flask instance inside an ngnix server. When bulding the image we install the python packages listed in _requirements.txt_. On the other side **session** project uses use a standard python image to run the web server because Flask-SocketIO already provides a production ready server based on _gevent_ or _eventlet_ (which must be installed on the docker image).
 
-- **TRAEFIK**: ...
+- **TRAEFIK**: Based on _traefik:2.3_ image. Reverse proxy to manage requests redirect between the web client and the web server. It also manages the certificates generations. This solves the problem to generate independent certificates and the need to accept them separately (in fact with firefox users had to accept both the web client and the web server certificate, with traefik they have a unique certificate for all the containers).
 
-# FURTHER EXPLANATIONS
-
-## OIDC AUTH CODE FLOWS
-
-...
+![Containers Architecture](pictures/ContainersArchitecture.png "Containers architecture")
 
 # REFERENCES
 
