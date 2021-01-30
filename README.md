@@ -1,6 +1,7 @@
 # AUTH-TEMPLATES
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md) 
 
 How can we develop a good authentication flow for our web applications? How can we limit users operations through a safe authorization system?
 
