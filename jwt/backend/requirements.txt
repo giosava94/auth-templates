@@ -1,5 +1,5 @@
 black
 flask-restful
 flask-cors
-flask-jwt-extended
+flask-jwt-extended<4
 webargs
